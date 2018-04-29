@@ -33,16 +33,38 @@ WtoC_test = len(df_test[df_test['result binary'] == 1])*len(df_test)**(-1)
 
 def data_input_target_split(R):	# This function will be implementing the machine learning routine
 	df_train, df_test, df = train_test_data_split(R)
-	df_train_input, df_train_targets = df_train[['eps','K']].values, df_train['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
-	df_test_input, df_test_targets = df_test[['eps','K']].values, df_test['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
-	return df_train_input, df_train_targets, df_test_input, df_test_targets
+	train_input, train_targets = df_train[['eps','K']].values, df_train['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
+	test_input, test_targets = df_test[['eps','K']].values, df_test['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
+	return train_input, train_targets, test_input, test_targets
 
 def trainer(R):
-	df_train_input, df_train_targets = data_input_target_split(R)[:2]
-	return df_train_targets[:10]
+	train_input, train_targets = data_input_target_split(R)[0],data_input_target_split(R)[1]
+	print 'Split data into training and validation sets'
+	X_train, X_valid, Y_train, Y_valid = cross_validation.train_test_split(train_input, train_targets, train_size = 0.9, random_state=10)
+	print 'Defined the classifier'
+	clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=3, max_features='auto', bootstrap=True, oob_score=False, n_jobs=4, random_state=None, verbose=0, min_density=None, compute_importances=None)
+	print 'Train the classifier'
+	start = time.time()
+	forest = clf.fit( X_train, Y_train )
+	print 'Evaluate the classifier'
+#	score = clf.score(X_valid, Y_valid)
+	N = (len(Y_valid)-sum((np.array(clf.predict(X_valid))-np.array(Y_valid))**2))*len(Y_valid)**(-1)	#calculates the number of times the validation prediction matches the target value, as a percentage
+	N = N*100
+#	predictions = clf.predict(X_valid)
+#	n = 0
+#	for i in xrange(len(predictions)):
+#		if predictions[i] == Y_valid[i]:
+#			n = n+1
+	print 'Calculate the RMSE score'
+	RMSE = mean_squared_error(clf.predict(X_valid), Y_valid)**0.5 #This is the scoring we ought to use.
+	end = time.time()
+	T = end - start
+#	print '- Finished training after %f seconds, with score = %f' % (T,score)
+	print '- RMSE score = %f' % RMSE
+	print '- Standard score = %f %%' %N
+	return forest, RMSE, N
 
-print trainer(.9)
-
+print trainer(1)[:]
 
 
 
