@@ -19,9 +19,35 @@ def train_test_data_split(R):	# R is the ratio of train data compared to the ful
 	N_test = len(df)-N_train
 	train_data = df[:N_train]
 	test_data = df[N_train:]
-	return test_data[:10]
+	return train_data, test_data, df
 
-print train_test_data_split(0.8)
+df_train, df_test, df = train_test_data_split(0.5)
+
+
+WtoC = len(df[df['result binary'] == 1])*len(df)**(-1)
+WtoC_train = len(df_train[df_train['result binary'] == 1])*len(df_train)**(-1)
+WtoC_test = len(df_test[df_test['result binary'] == 1])*len(df_test)**(-1)
+
+# The WtoC (Wrong to Correct) ratio determines the amount of wrong values compared to the correct values in the full data set. The ratio turns out to be 96%. Meaning, there is 96% of values that have the wrong lepton asymmetry, and only 4% that have the correct value. This is a bit of an issue, because this means that the machine learning algorithm will be exposed to mostly wrong values and will learn them. But not so much the correct values. This migh impact the learning efficiency. Thankfully, since we have randomized the data, the WtoC ratio remains the same in the training and test data
+
+
+def data_input_target_split(R):	# This function will be implementing the machine learning routine
+	df_train, df_test, df = train_test_data_split(R)
+	df_train_input, df_train_targets = df_train[['eps','K']].values, df_train['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
+	df_test_input, df_test_targets = df_test[['eps','K']].values, df_test['result binary'].values	# converts the dataframe into a numpy array! Useful to input this into scikit-learn.
+	return df_train_input, df_train_targets, df_test_input, df_test_targets
+
+def trainer(R):
+	df_train_input, df_train_targets = data_input_target_split(R)[:2]
+	return df_train_targets[:10]
+
+print trainer(.9)
+
+
+
+
+
+
 
 
 
